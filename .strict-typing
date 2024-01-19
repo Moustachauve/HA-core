@@ -122,6 +122,7 @@ homeassistant.components.climate.*
 homeassistant.components.cloud.*
 homeassistant.components.co2signal.*
 homeassistant.components.command_line.*
+homeassistant.components.config.*
 homeassistant.components.configurator.*
 homeassistant.components.counter.*
 homeassistant.components.cover.*
@@ -248,6 +249,7 @@ homeassistant.components.knx.*
 homeassistant.components.kraken.*
 homeassistant.components.lacrosse.*
 homeassistant.components.lacrosse_view.*
+homeassistant.components.lamarzocco.*
 homeassistant.components.lametric.*
 homeassistant.components.laundrify.*
 homeassistant.components.lawn_mower.*
