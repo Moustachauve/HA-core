@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
@@ -17,6 +17,7 @@ from homeassistant.components.number import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -31,7 +32,19 @@ class TechnoVENumberDescription(NumberEntityDescription):
 
     native_max_value_fn: Callable[[TechnoVE], float]
     native_value_fn: Callable[[TechnoVE], float]
-    set_value_fn: Callable[[TechnoVE, float], Awaitable[dict[str, Any]]]
+    set_value_fn: Callable[
+        [TechnoVEDataUpdateCoordinator, float], Coroutine[Any, Any, None]
+    ]
+
+
+async def _set_max_current(
+    coordinator: TechnoVEDataUpdateCoordinator, value: float
+) -> None:
+    if coordinator.data.info.in_sharing_mode:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="max_current_in_sharing_mode"
+        )
+    await coordinator.technove.set_max_current(value)
 
 
 NUMBERS = [
@@ -45,7 +58,7 @@ NUMBERS = [
         native_min_value=MIN_CURRENT,
         native_max_value_fn=lambda station: station.info.max_station_current,
         native_value_fn=lambda station: station.info.max_current,
-        set_value_fn=lambda technoVE, value: technoVE.set_max_current(value),
+        set_value_fn=_set_max_current,
     ),
 ]
 
@@ -90,4 +103,4 @@ class TechnoVENumberEntity(TechnoVEEntity, NumberEntity):
     @technove_exception_handler
     async def async_set_native_value(self, value: float) -> None:
         """Set the value for the TechnoVE number entity."""
-        await self.entity_description.set_value_fn(self.coordinator.technove, value)
+        await self.entity_description.set_value_fn(self.coordinator, value)
